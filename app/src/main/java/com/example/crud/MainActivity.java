@@ -1,5 +1,6 @@
 package com.example.crud;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -9,6 +10,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
+import android.widget.Toast;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -17,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-
     private Button btnCreate;
     private DrinkDAO dao;
     private DrinkAdapter adapter;
@@ -44,14 +45,40 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(intent, 123);
             }
         });
+        loadList();
+    }
+    private void getFromRaw(){
+        InputStream is = getResources().openRawResource(R.raw.data);
+        List<Drink> result = null;
         try {
-            InputStream is = getResources().openRawResource(R.raw.data);
-            List<Drink> result = dao.loadFromRAR(is);
+            result = dao.loadFromRAR(is);
             FileOutputStream fos = openFileOutput("drinks.txt", MODE_PRIVATE);
-            if (result.size()>0) dao.saveToInternal(fos, result);
-        }
-        catch (Exception e) {
+            if (result.size()>0)
+            {
+                lst.addAll(result);
+                dao.saveToInternal(fos, lst);
+            }
+        } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == 123) {
+            if(resultCode == RESULT_OK) {
+                Toast.makeText(this, "Created drink successfully!", Toast.LENGTH_SHORT).show();
+            }
+        }
+        if(requestCode == 234) {
+            if(resultCode == RESULT_OK) {
+                Toast.makeText(this, "Updated drink successfully", Toast.LENGTH_SHORT).show();
+            }
         }
         loadList();
     }
@@ -60,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
         //load list from file
         try(FileInputStream fis = openFileInput("drinks.txt")) {
             lst = dao.loadFromInternal(fis);
+           // getFromRaw();
         } catch(Exception e) {
             lst = new ArrayList<>();
         }
